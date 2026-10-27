@@ -1,65 +1,28 @@
 {% extends "base.html.j2" %}
+{% from "cells.j2" import cell %}
 {% block kind %}cover{% endblock %}
-{% block content %}
-<section class="stats">
-  <div class="stat">
-    <div class="label">Бои</div>
-    <div class="value">{{ battles | num }}</div>
-  </div>
-  <div class="stat">
-    <div class="label">Победы</div>
-    <div class="value {{ win_class }}">{{ win or "—" }}</div>
-  </div>
-  <div class="stat gold">
-    <div class="label">Золото</div>
-    <div class="value">{{ gold | num }}</div>
-  </div>
-  <div class="stat credits">
-    <div class="label">Кредиты</div>
-    <div class="value">{{ credits | num }}</div>
-  </div>
-  <div class="stat prem{% if not premium %} off{% endif %}">
-    <div class="label">Премиум</div>
-    {% if premium %}
-    <div class="value small">до {{ premium.until }}</div>
-    <div class="sub">{{ premium.left }}</div>
-    {% else %}
-    <div class="value small">нет</div>
-    {% endif %}
-  </div>
-</section>
-<section class="lower">
-  <div class="side">
-    <div class="counters">
-      {% for label, value in counters %}
-      <div class="counter">
-        <div class="value">{{ value | num }}</div>
-        <div class="label">{{ label }}</div>
+{% block body %}
+  <main class="cover-body">
+    <section class="form">
+      {% for row in rows %}
+      <div class="row">
+        {% for label, value in row %}
+        <div class="f"><span class="l">{{ label }}</span><span class="typed v">{{ value }}</span></div>
+        {% endfor %}
       </div>
       {% endfor %}
-    </div>
-    {% if facts %}
-    <dl class="facts">
-      {% for label, value in facts %}
-      <div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>
-      {% endfor %}
-    </dl>
-    {% endif %}
-  </div>
-  {% if hero %}
-  <div class="hero">
-    <div class="hero-title">Лучшее в ангаре</div>
-    <div class="hero-grid n{{ hero | length }}">
-      {% for card in hero %}
-      <div class="card big{% if card.premium %} prem{% endif %}">
-        <div class="tier">{{ card.tier }}</div>
-        {% if card.premium %}<div class="badge">ПРЕМ</div>{% endif %}
-        <div class="pic"><img src="{{ card.image }}" alt=""></div>
-        <div class="name">{{ card.name }}</div>
+      <div class="tally">
+        {% for label, value in tally %}
+        <div class="t"><span class="l">{{ label }}</span><span class="typed n">{{ value }}</span></div>
+        {% endfor %}
       </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
-</section>
+    </section>
+    <section class="photos">
+      <div class="ph-title">Фотографии машин</div>
+      <div class="ph-grid">
+        {% for c in hero %}{{ cell(c, true) }}{% endfor %}
+        {% for _ in range(4 - hero | length) %}<div class="cell"></div>{% endfor %}
+      </div>
+    </section>
+  </main>
 {% endblock %}

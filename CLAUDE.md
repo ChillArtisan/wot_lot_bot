@@ -5,7 +5,7 @@ Telegram bot: a Lolz Market WoT listing link in → 1280x720 PNG slides (cover, 
 ## Layout
 - `src/wot_lot_bot/lolz.py` — link parsing, `GET /{item_id}` (base `https://prod-api.lzt.market`, Bearer token).
 - `account.py` — `scrub`/`from_item`: whitelist of WoT fields → `WotAccount`. The only way item data travels further.
-- `slides.py` + `templates/*.j2` + `assets/slide.css` — HTML per slide; fonts (OFL, `assets/fonts`) and tank pictures inlined as data URIs.
+- `slides.py` + `templates/*.j2` + `assets/slide.css` — HTML per slide in the «Формуляр» style (army vehicle log book: green print on grey-green form paper, typed values, violet rubber stamp with the shop name). Fonts PT Sans Narrow (print) and IBM Plex Mono (typewriter), OFL, in `assets/fonts`; fonts and tank pictures inlined as data URIs.
 - `render.py` — Chromium `--screenshot`, network cut off (ported from paygame_bot `paygame/screenshot.py`).
 - `bot.py` — aiogram router, admins only; `summary.py` — lot text.
 

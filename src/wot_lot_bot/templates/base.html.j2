@@ -9,23 +9,40 @@
 </style>
 </head>
 <body>
-<div class="slide {% block kind %}{% endblock %}">
-  <div class="bg"></div>
-  <div class="accent"></div>
-  <header class="top">
+<svg class="defs" width="0" height="0" aria-hidden="true">
+  {# Tank pictures carry a faint shadow out to their edges; dropping the
+     weakest alpha removes the box it draws on paper. #}
+  <filter id="clean">
+    <feComponentTransfer><feFuncA type="linear" slope="1.12" intercept="-0.12"/></feComponentTransfer>
+  </filter>
+  {# Rubber-stamp ink: speckled where the stamp missed, slightly wobbly. #}
+  <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.95" numOctaves="2" seed="11" result="grain"/>
+    <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.6 1.9" result="mask"/>
+    <feComposite in="SourceGraphic" in2="mask" operator="in" result="ink"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="1" seed="4" result="wobble"/>
+    <feDisplacementMap in="ink" in2="wobble" scale="3"/>
+  </filter>
+</svg>
+<div class="sheet {% block kind %}{% endblock %}">
+  <header class="head">
     <div>
-      <div class="kicker">World of Tanks{% if region %}<span class="dot"></span>{{ region }}{% endif %}</div>
-      <h1>{{ heading }}</h1>
+      <h1>{{ title }}</h1>
+      <p class="sub">{{ sub }}</p>
     </div>
-    {% if note %}<div class="note">{{ note }}</div>{% endif %}
+    <div class="sheetno">Лист <span class="typed">{{ sheet }}</span> из <span class="typed">{{ sheet_total }}</span></div>
   </header>
-  <main>
-{% block content %}{% endblock %}
-  </main>
-  <footer>
-    <div class="pager">{{ pager }}</div>
-    {% if watermark %}<div class="wm">{{ watermark }}</div>{% endif %}
-  </footer>
+{% block body %}{% endblock %}
+  <svg class="stamp" viewBox="0 0 240 240" aria-hidden="true">
+    <defs><path id="ring" d="M120,120 m-91,0 a91,91 0 1,1 182,0 a91,91 0 1,1 -182,0"/></defs>
+    <circle cx="120" cy="120" r="114" fill="none" stroke="currentColor" stroke-width="5"/>
+    <circle cx="120" cy="120" r="106" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    <circle cx="120" cy="120" r="72" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <text class="ring" fill="currentColor"><textPath href="#ring" textLength="566" lengthAdjust="spacing">{{ stamp.ring }}</textPath></text>
+    <text class="name" x="120" y="114" text-anchor="middle" fill="currentColor" style="font-size: {{ stamp.name_size }}px">{{ stamp.name }}</text>
+    <line x1="62" y1="127" x2="178" y2="127" stroke="currentColor" stroke-width="2"/>
+    <text class="date" x="120" y="155" text-anchor="middle" fill="currentColor">{{ stamp.date }}</text>
+  </svg>
 </div>
 </body>
 </html>

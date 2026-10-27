@@ -27,6 +27,10 @@ CLAN_FIELDS = ("name", "tag", "members_count")
 TOP_TIER = 10
 
 ROMAN = {1: "I", 2: "II", 3: "III", 4: "IV", 5: "V", 6: "VI", 7: "VII", 8: "VIII", 9: "IX", 10: "X", 11: "XI"}
+# Nation code that starts a vehicle picture name: .../vehicle/usa-A195_Gorilla.png
+NATIONS = {"usa": "США", "ussr": "СССР", "germany": "Германия", "uk": "Великобритания",
+           "france": "Франция", "china": "Китай", "japan": "Япония", "czech": "Чехословакия",
+           "sweden": "Швеция", "poland": "Польша", "italy": "Италия", "intunion": "Сборная"}
 
 
 class NotWotItem(ValueError):
@@ -59,6 +63,15 @@ class Tank:
     @property
     def tier_roman(self) -> str:
         return ROMAN.get(self.tier, str(self.tier))
+
+    @property
+    def nation(self) -> str:
+        """Country in Russian, or "" when the picture name does not say."""
+        for url in (self.image_url, self.alt_image_url):
+            stem = url.rsplit("/", 1)[-1]
+            if "-" in stem and stem.split("-", 1)[0] in NATIONS:
+                return NATIONS[stem.split("-", 1)[0]]
+        return ""
 
     @property
     def sort_key(self) -> tuple:

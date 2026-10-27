@@ -84,9 +84,10 @@ def test_slides_never_show_login_data_or_lolz_id(raw):
 def test_pages_are_evened_out(raw):
     account = from_item(raw)
     slides = build_slides(account, {}, now=NOW)
-    # 14 tops → 7 + 7, 16 premiums → 8 + 8
-    assert slides[1].html.count('class="card') == 7
-    assert slides[3].html.count('class="card') == 8
+    # 14 tops → 7 + 7, 16 premiums → 8 + 8; the rest of each 4x2 table stays blank
+    assert slides[1].html.count('<figure class="cell"') == 7
+    assert slides[3].html.count('<figure class="cell"') == 8
+    assert slides[1].html.count('class="cell"') == 8
 
 
 def test_no_tops_no_premium_slides():
@@ -121,4 +122,35 @@ def test_many_premiums_switch_to_dense_grid():
     tanks = [{"tank_id": i, "name": f"P{i}", "tier": 8, "is_premium": 1} for i in range(1, 31)]
     slides = build_slides(from_item({"wot_battle_count": 1, "wotTanks": tanks}), {}, now=NOW)
     premium = [s for s in slides if "premium" in s.name]
-    assert len(premium) == 1 and 'class="tanks dense"' in premium[0].html
+    assert len(premium) == 1 and 'class="table dense"' in premium[0].html
+    # every tank on a premium sheet is premium: no "прем" stamp on each
+    assert 'class="pstamp"' not in premium[0].html
+
+
+def test_nation_from_picture_name():
+    tank = {"tank_id": 1, "name": "Gorilla", "tier": 11, "is_premium": 0,
+            "image_url": "//api.worldoftanks.com/static/2.77.0/wot/encyclopedia/vehicle/usa-A195_Gorilla.png"}
+    odd = {"tank_id": 2, "name": "X", "tier": 5, "is_premium": 0, "image_url": "https://cdn.test/x.png"}
+    account = from_item({"wot_battle_count": 1, "wotTanks": [tank, odd]})
+    assert [t.nation for t in account.tanks] == ["США", ""]
+
+
+@pytest.mark.parametrize("watermark, ring_has_name", [("SHOP", True), ("", False), ("A" * 30, False)])
+def test_stamp_carries_shop_name_and_date(raw, watermark, ring_has_name):
+    slides = build_slides(from_item(raw), {}, watermark=watermark, now=NOW)
+    cover = slides[0].html
+    assert "27.10.2026" in cover
+    assert ("МАГАЗИН " in cover) is ring_has_name
+    if watermark:
+        assert watermark in cover
+
+
+def test_form_pair_splits_when_too_long():
+    from wot_lot_bot.slides import _form_rows
+    rows = _form_rows([
+        [("Игровой клиент", "Lesta Game Center"), ("Клан", "[SYNTH]")],
+        [("Золото", "138"), ("Кредиты", "7 236 043")],
+        [("Личный рейтинг", ""), ("Премиум-аккаунт", "нет")],
+    ])
+    assert rows == [[("Игровой клиент", "Lesta Game Center")], [("Клан", "[SYNTH]")],
+                    [("Золото", "138"), ("Кредиты", "7 236 043")], [("Премиум-аккаунт", "нет")]]

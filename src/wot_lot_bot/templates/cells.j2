@@ -1,0 +1,9 @@
+{% macro cell(c, mark_premium) -%}
+<figure class="cell">
+  <span class="tier">{{ c.tier }}</span>
+  {% if c.nation %}<span class="nation">{{ c.nation }}</span>{% endif %}
+  <img src="{{ c.image }}" alt="">
+  <figcaption class="typed">{{ c.name }}</figcaption>
+  {% if mark_premium and c.premium %}<span class="pstamp">прем</span>{% endif %}
+</figure>
+{%- endmacro %}
