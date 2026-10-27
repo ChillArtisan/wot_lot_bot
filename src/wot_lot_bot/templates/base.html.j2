@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="{{ csp }}">
+<style>
+{{ fonts_css | safe }}
+{{ css | safe }}
+</style>
+</head>
+<body>
+<div class="slide {% block kind %}{% endblock %}">
+  <div class="bg"></div>
+  <div class="accent"></div>
+  <header class="top">
+    <div>
+      <div class="kicker">World of Tanks{% if region %}<span class="dot"></span>{{ region }}{% endif %}</div>
+      <h1>{{ heading }}</h1>
+    </div>
+    {% if note %}<div class="note">{{ note }}</div>{% endif %}
+  </header>
+  <main>
+{% block content %}{% endblock %}
+  </main>
+  <footer>
+    <div class="pager">{{ pager }}</div>
+    {% if watermark %}<div class="wm">{{ watermark }}</div>{% endif %}
+  </footer>
+</div>
+</body>
+</html>

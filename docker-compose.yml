@@ -1,0 +1,17 @@
+services:
+  wot-lot-bot:
+    build: .
+    container_name: wot_lot_bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      TZ: Europe/Moscow
+      DATA_DIR: /app/data
+    volumes:
+      - ./data:/app/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

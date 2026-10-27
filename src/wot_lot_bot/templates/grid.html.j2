@@ -1,0 +1,14 @@
+{% extends "base.html.j2" %}
+{% block kind %}grid{% endblock %}
+{% block content %}
+<section class="tanks{% if dense %} dense{% else %} big rows{{ rows }}{% endif %}" style="--cols: {{ cols }}; --rows: {{ rows }}">
+  {% for card in cards %}
+  <div class="card{% if card.premium %} prem{% endif %}">
+    <div class="tier">{{ card.tier }}</div>
+    {% if card.premium and not dense %}<div class="badge">ПРЕМ</div>{% endif %}
+    <div class="pic"><img src="{{ card.image }}" alt=""></div>
+    <div class="name">{{ card.name }}</div>
+  </div>
+  {% endfor %}
+</section>
+{% endblock %}

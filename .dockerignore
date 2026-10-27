@@ -1,0 +1,10 @@
+*
+!Dockerfile
+!requirements.txt
+!constraints.txt
+!pyproject.toml
+!src/
+!src/**
+**/__pycache__
+**/*.pyc
+**/.env*

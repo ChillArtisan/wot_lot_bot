@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.env
+.env.*
+!.env.example
+data/
+out/
+# Raw API dumps may hold login data; only scrubbed fixtures go to tests/fixtures.
+raw/
+build/
+# Real listings stay local; only the synthetic fixture is published.
+tests/fixtures/*
+!tests/fixtures/synthetic_item.json
