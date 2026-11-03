@@ -2,7 +2,8 @@
 
     python scripts/render_fixture.py tests/fixtures/synthetic_item.json [out_dir]
 
-Tank pictures are downloaded (and cached in DATA_DIR) like the bot does.
+Tank pictures are downloaded (and cached in DATA_DIR) like the bot does. An
+item with both WoT and Blitz gets both sets, the Blitz one as blitz-*.png.
 """
 from __future__ import annotations
 
@@ -11,7 +12,7 @@ import json
 import sys
 from pathlib import Path
 
-from wot_lot_bot.account import from_item
+from wot_lot_bot.account import from_item, games
 from wot_lot_bot.config import get_settings
 from wot_lot_bot.images import tank_images
 from wot_lot_bot.render import find_browser, png_size, render
@@ -23,15 +24,17 @@ async def main(fixture: Path, out_dir: Path) -> None:
     browser = find_browser(settings.chromium_path)
     if not browser:
         sys.exit("Chromium not found: set CHROMIUM_PATH")
-    account = from_item(json.loads(fixture.read_text(encoding="utf-8")))
-    images = await tank_images(account.tanks, settings.tank_cache_dir)
-    print(f"{len(account.tanks)} tanks, {len(images)} pictures")
+    item = json.loads(fixture.read_text(encoding="utf-8"))
     out_dir.mkdir(parents=True, exist_ok=True)
-    for slide in build_slides(account, images, watermark=settings.watermark or "SHOP NAME"):
-        data = await render(slide.html, browser=browser)
-        (out_dir / slide.name).write_bytes(data)
-        (out_dir / slide.name).with_suffix(".html").write_text(slide.html, encoding="utf-8")
-        print(slide.name, "x".join(map(str, png_size(data))))
+    for game in games(item):
+        account = from_item(item, game)
+        images = await tank_images(account.tanks, settings.tank_cache_dir)
+        print(f"{account.game_title}: {len(account.tanks)} tanks, {len(images)} pictures")
+        for slide in build_slides(account, images, watermark=settings.watermark or "SHOP NAME"):
+            data = await render(slide.html, browser=browser)
+            (out_dir / slide.name).write_bytes(data)
+            (out_dir / slide.name).with_suffix(".html").write_text(slide.html, encoding="utf-8")
+            print(slide.name, "x".join(map(str, png_size(data))))
 
 
 if __name__ == "__main__":

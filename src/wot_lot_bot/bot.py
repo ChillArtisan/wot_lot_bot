@@ -12,7 +12,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import CommandStart
 from aiogram.types import BufferedInputFile, InputMediaDocument, Message
 
-from wot_lot_bot.account import NotWotItem, from_item
+from wot_lot_bot.account import NotWotItem, from_item, games
 from wot_lot_bot.config import Settings
 from wot_lot_bot.images import tank_images
 from wot_lot_bot.lolz import LolzClient, LolzError, parse_item_id
@@ -24,10 +24,11 @@ logger = logging.getLogger(__name__)
 
 ALBUM_LIMIT = 10
 HELP = (
-    "Пришли ссылку на лот World of Tanks с Lolz, например\n"
+    "Пришли ссылку на лот World of Tanks или Tanks Blitz с Lolz, например\n"
     "https://lzt.market/123456789/\n"
     "или просто ID лота. В ответ придут картинки 1280×720 для PayGame "
-    "и текст со статой для описания."
+    "и текст со статой для описания. Если в лоте аккаунт сразу в двух играх, "
+    "придёт по набору на каждую."
 )
 
 
@@ -77,24 +78,26 @@ def build_router(settings: Settings, browser: list[str] | None) -> Router:
         try:
             async with LolzClient(settings.lolz_api_token, settings.lolz_api_base) as client:
                 item = await client.get_item(item_id)
-            account = from_item(item)
-            del item  # may hold login data; only `account` goes further
+            accounts = [from_item(item, game) for game in games(item)]
+            del item  # may hold login data; only `accounts` go further
 
-            await _status(status, f"🖼 Качаю картинки танков: {len(account.tanks)}…")
-            images = await tank_images(account.tanks, settings.tank_cache_dir)
-            slides = build_slides(account, images, watermark=settings.watermark)
-            files = []
-            for number, slide in enumerate(slides, 1):
-                await _status(status, f"🎨 Рисую слайды: {number}/{len(slides)}")
-                files.append((slide.name, await render(slide.html, browser=browser)))
+            for account in accounts:
+                game = f" {account.game_title}" if len(accounts) > 1 else ""
+                await _status(status, f"🖼 Качаю картинки танков{game}: {len(account.tanks)}…")
+                images = await tank_images(account.tanks, settings.tank_cache_dir)
+                slides = build_slides(account, images, watermark=settings.watermark)
+                files = []
+                for number, slide in enumerate(slides, 1):
+                    await _status(status, f"🎨 Рисую слайды{game}: {number}/{len(slides)}")
+                    files.append((slide.name, await render(slide.html, browser=browser)))
 
-            await _status(status, "📤 Отправляю…")
-            await _send_files(message, files)
-            missing = len(account.tanks) - len(images)
-            text = lot_text(account)
-            if missing:
-                text += f"\n\n⚠️ Не скачались картинки {missing} танков: на слайдах силуэт."
-            await message.answer(text)
+                await _status(status, "📤 Отправляю…")
+                await _send_files(message, files)
+                missing = len(account.tanks) - len(images)
+                text = lot_text(account)
+                if missing:
+                    text += f"\n\n⚠️ Не скачались картинки {missing} танков: на слайдах силуэт."
+                await message.answer(text)
             try:
                 await status.delete()
             except TelegramBadRequest:

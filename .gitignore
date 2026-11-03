@@ -11,6 +11,7 @@ out/
 # Raw API dumps may hold login data; only scrubbed fixtures go to tests/fixtures.
 raw/
 build/
-# Real listings stay local; only the synthetic fixture is published.
+# Real listings stay local; only the synthetic fixtures are published.
 tests/fixtures/*
 !tests/fixtures/synthetic_item.json
+!tests/fixtures/synthetic_blitz_item.json

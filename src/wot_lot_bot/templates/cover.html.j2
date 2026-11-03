@@ -20,7 +20,7 @@
     <section class="photos">
       <div class="ph-title">Фотографии машин</div>
       <div class="ph-grid">
-        {% for c in hero %}{{ cell(c, true) }}{% endfor %}
+        {% for c in hero %}{{ cell(c) }}{% endfor %}
         {% for _ in range(4 - hero | length) %}<div class="cell"></div>{% endfor %}
       </div>
     </section>

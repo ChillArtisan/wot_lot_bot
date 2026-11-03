@@ -3,7 +3,7 @@
 {% block kind %}list{% endblock %}
 {% block body %}
   <main class="table{% if dense %} dense{% endif %}" style="--cols: {{ cols }}; --rows: {{ rows }}">
-    {% for c in cells %}{{ cell(c, mark_premium) }}{% endfor %}
+    {% for c in cells %}{{ cell(c) }}{% endfor %}
     {% for _ in range(cols * rows - cells | length) %}<div class="cell"></div>{% endfor %}
   </main>
 {% endblock %}

@@ -1,10 +1,11 @@
 # wot_lot_bot
 
-Telegram bot: a Lolz Market WoT listing link in → 1280x720 PNG slides (cover, tier X, premium, hangar) + lot text out. The owner uploads them to a PayGame lot.
+Telegram bot: a Lolz Market World of Tanks or Tanks Blitz listing link in → 1280x720 PNG slides (cover, tier X, premium, hangar) + lot text out, one set per game in the item (Blitz files are `blitz-*.png`). The owner uploads them to a PayGame lot.
 
 ## Layout
 - `src/wot_lot_bot/lolz.py` — link parsing, `GET /{item_id}` (base `https://prod-api.lzt.market`, Bearer token).
-- `account.py` — `scrub`/`from_item`: whitelist of WoT fields → `WotAccount`. The only way item data travels further.
+- `account.py` — `scrub`/`games`/`from_item`: whitelist of WoT and Blitz fields → one `WotAccount` per game. The only way item data travels further.
+- Blitz on Lolz: before the Oct 2026 merge, category 16 with the plain WoT field names and `wot_blitz` = 1 (confirmed by the API schema; Blitz tank records carry `is_collectible`). Merged items are expected to put Blitz under `wot_blitz_*`/`blitz*` (`account._blitz_name`), which the docs don't confirm yet: `dump_item.py` prints any Blitz field the bot does not read. Blitz nation comes from `(tank_id >> 4) & 15`.
 - `slides.py` + `templates/*.j2` + `assets/slide.css` — HTML per slide in the «Формуляр» style (army vehicle log book: green print on grey-green form paper, typed values, violet rubber stamp with the shop name). Fonts PT Sans Narrow (print) and IBM Plex Mono (typewriter), OFL, in `assets/fonts`; fonts and tank pictures inlined as data URIs.
 - `render.py` — Chromium `--screenshot`, network cut off (ported from paygame_bot `paygame/screenshot.py`).
 - `bot.py` — aiogram router, admins only; `summary.py` — lot text.
@@ -17,7 +18,7 @@ Telegram bot: a Lolz Market WoT listing link in → 1280x720 PNG slides (cover, 
 
 ## Commands
 - Tests: `.venv/Scripts/python.exe -m pytest -q`
-- Design loop: `.venv/Scripts/python.exe scripts/render_fixture.py tests/fixtures/<id>.json out` then look at `out/*.png`.
+- Design loop: `.venv/Scripts/python.exe scripts/render_fixture.py tests/fixtures/<id>.json out` then look at `out/*.png` (`synthetic_item.json` is WoT, `synthetic_blitz_item.json` is Blitz).
 - Real listing → fixture: `.venv/Scripts/python.exe scripts/dump_item.py <link>`
 - Run locally: `.venv/Scripts/python.exe -m wot_lot_bot` (Chrome is auto-detected on Windows).
 - Server: `docker compose up -d --build` in `~/wot-lot-bot` on `ssh junction`; deploy only on explicit request.

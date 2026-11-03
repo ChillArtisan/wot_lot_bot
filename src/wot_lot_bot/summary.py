@@ -20,17 +20,22 @@ def _names(tanks) -> str:
 def lot_text(account: WotAccount, now: datetime | None = None) -> str:
     now = now or datetime.now(timezone.utc)
     region = account.region_phrase or account.region
-    lines = [f"World of Tanks{' · ' + region if region else ''}"]
+    lines = [f"{account.game_title}{' · ' + region if region else ''}"]
     win = "" if account.win_percent is None else f" · Победы: {account.win_percent:.2f}%".replace(".", ",")
     lines.append(f"Бои: {fmt_int(account.battles)}{win}")
-    lines.append(f"Золото: {fmt_int(account.gold)} · Кредиты: {fmt_int(account.credits)}")
+    lines.append(f"Золото: {fmt_int(account.gold)} · {account.credits_name}: {fmt_int(account.credits)}")
     if account.has_premium(now):
         lines.append(f"Премиум: до {account.premium_until:%d.%m.%Y}")
-    lines.append(f"Танков: {account.tank_count} · Топов X: {account.top_count} · "
-                 f"Премов: {account.premium_count}")
+    counts = (f"Танков: {account.tank_count} · Топов X: {account.top_count} · "
+              f"Премов: {account.premium_count}")
+    if account.collectibles:
+        counts += f" · Коллекционных: {len(account.collectibles)}"
+    lines.append(counts)
     if account.tops:
         lines += ["", f"Топы X ({len(account.tops)}): {_names(account.tops)}"]
     if account.premiums:
         lines += ["", f"Премы ({len(account.premiums)}): {_names(account.premiums)}"]
+    if account.collectibles:
+        lines += ["", f"Коллекционные ({len(account.collectibles)}): {_names(account.collectibles)}"]
     text = "\n".join(lines).replace(" ", " ")
     return text if len(text) <= MAX_CHARS else text[:MAX_CHARS - 1] + "…"

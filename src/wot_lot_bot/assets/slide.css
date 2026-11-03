@@ -167,6 +167,9 @@ h1 { font: 700 52px/.92 'PT Sans Narrow', sans-serif; }
   mix-blend-mode: multiply;
   opacity: .9;
 }
+/* The photo cells are too narrow for a long country name and a stamp on
+   one line: the stamp goes on the photo's corner instead. */
+.photos .pstamp { top: 33px; }
 
 /* list sheets: one printed table, --cols x --rows from the template */
 .table {

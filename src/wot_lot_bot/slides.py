@@ -3,6 +3,8 @@
 Sheet 1 is the form itself (account fields, tank tally, four photos), the
 next sheets list the tier X–XI tanks, the premium tanks and the whole
 hangar as printed tables. Every sheet carries the shop's rubber stamp.
+World of Tanks and Tanks Blitz share the layout; a Blitz set is named
+`blitz-*.png` so both sets of a two-game lot can sit side by side.
 
 Each slide is a self-contained HTML page (fonts and pictures inlined) sized
 1280x720 for `render.render`. The Lolz item ID is never printed: the slides
@@ -19,7 +21,7 @@ from urllib.parse import quote
 
 from jinja2 import Environment, FileSystemLoader
 
-from wot_lot_bot.account import Tank, WotAccount
+from wot_lot_bot.account import BLITZ, Tank, WotAccount
 from wot_lot_bot.render import CSP
 
 PACKAGE_DIR = Path(__file__).resolve().parent
@@ -113,9 +115,16 @@ def _chunks(items: tuple, size: int) -> list[tuple]:
     return [items[i:i + per_page] for i in range(0, len(items), per_page)]
 
 
-def _cells(tanks, images: dict[int, str]) -> list[dict]:
+def _mark(tank: Tank, mark_premium: bool) -> str:
+    """Rubber stamp in the cell's corner: premium, or a Blitz collectible."""
+    if tank.is_premium:
+        return "прем" if mark_premium else ""
+    return "колл" if tank.is_collectible else ""
+
+
+def _cells(tanks, images: dict[int, str], mark_premium: bool = True) -> list[dict]:
     return [
-        {"name": t.name, "tier": t.tier_roman, "premium": t.is_premium, "nation": t.nation,
+        {"name": t.name, "tier": t.tier_roman, "mark": _mark(t, mark_premium), "nation": t.nation,
          "image": images.get(t.tank_id, PLACEHOLDER)}
         for t in tanks
     ]
@@ -175,13 +184,13 @@ def _cover_context(account: WotAccount, images: dict[int, str], now: datetime) -
         [("Зарегистрирована", date(account.registered)), ("Последний вход", date(account.last_activity))],
         [("Проведено боёв", fmt_int(account.battles)), ("Побед", win)],
         [("Личный рейтинг", fmt_int(account.rating) if account.rating else ""), ("Премиум-аккаунт", premium)],
-        [("Золото", fmt_int(account.gold)), ("Кредиты", fmt_int(account.credits))],
+        [("Золото", fmt_int(account.gold)), (account.credits_name, fmt_int(account.credits))],
         [("Игровой клиент", account.launcher), ("Клан", clan)],
     ])
     tiers = account.top_tiers
     return {
         "title": "Формуляр",
-        "sub": "учётной записи World of Tanks",
+        "sub": f"учётной записи {account.game_title}",
         "rows": rows,
         "tally": [
             ("Машин в ангаре", account.tank_count),
@@ -216,17 +225,17 @@ def build_slides(account: WotAccount, images: dict[int, str], *, watermark: str 
             cols, rows = grid
             rows = -(-len(chunk) // cols) if dense else max(2, -(-len(chunk) // cols))
             pages.append((key if len(chunks) == 1 else f"{key}-{number}", "grid.html.j2", {
-                "title": title, "sub": sub, "cells": _cells(chunk, images), "dense": dense,
-                "cols": cols, "rows": rows,
+                "title": title, "sub": sub, "dense": dense, "cols": cols, "rows": rows,
                 # On the premium sheets every tank is premium: no stamp on each.
-                "mark_premium": key != "premium",
+                "cells": _cells(chunk, images, mark_premium=key != "premium"),
             }))
 
     base = {"csp": CSP, "fonts_css": fonts_css(),
             "css": (ASSETS_DIR / "slide.css").read_text(encoding="utf-8"),
             "stamp": _stamp(watermark, now), "sheet_total": len(pages)}
+    prefix = "blitz-" if account.game == BLITZ else ""
     slides = []
     for index, (name, template, context) in enumerate(pages, 1):
         html = _env().get_template(template).render(**base, **context, sheet=index)
-        slides.append(Slide(name=f"{index:02d}-{name}.png", html=html))
+        slides.append(Slide(name=f"{prefix}{index:02d}-{name}.png", html=html))
     return slides
