@@ -7,11 +7,11 @@ up on a slide, in a log line or in a test fixture.
 Both games live in the Lolz World of Tanks category. Until October 2026 Blitz
 had a category of its own (16) whose items carried exactly the WoT fields
 (`wot_battle_count`, `wotTanks`, ...) plus `wot_blitz` = 1; such an item is
-read through the WoT names. Since the merge one item may hold both games. The
-Blitz half is expected under the names Lolz gives a game in its other merged
-categories (`riot_valorant_level`, `mihoyo_genshin_level`, `valorantInventory`),
-that is `wot_blitz_gold`, `blitzTanks`: see `_blitz_name`. Those names are not
-in the API docs yet; `scripts/dump_item.py` lists what a real item holds.
+read through the WoT names. Since the merge one item (category 14) may hold
+both games: the Blitz half sits under `wot_blitz_*` and `wotBlitz*`
+(`wot_blitz_gold`, `wotBlitzTanks`), see `_blitz_name`. Checked on live
+listings in November 2026; merged items have no Blitz launcher, rating or
+last activity.
 """
 from __future__ import annotations
 
@@ -42,8 +42,10 @@ _TANK_LISTS = ("wotTanks", "wotTopTanks", "wotPremiumTanks", "wotTopPremiumTanks
 
 
 def _blitz_name(key: str) -> str:
-    """Blitz twin of a WoT field in a merged item: wot_gold → wot_blitz_gold, wotTanks → blitzTanks."""
-    return "wot_blitz_" + key.removeprefix("wot_") if key.startswith("wot_") else "blitz" + key.removeprefix("wot")
+    """Blitz twin of a WoT field in a merged item: wot_gold → wot_blitz_gold, wotTanks → wotBlitzTanks."""
+    if key.startswith("wot_"):
+        return "wot_blitz_" + key.removeprefix("wot_")
+    return "wotBlitz" + key.removeprefix("wot")
 
 
 WOT_FIELDS = _COMMON + _GAME + tuple(_blitz_name(key) for key in _GAME)

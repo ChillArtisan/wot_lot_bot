@@ -28,7 +28,7 @@ def raw() -> dict:
 
 @pytest.fixture
 def merged() -> dict:
-    """One item with both games: WoT under wot_*, Blitz under wot_blitz_* / blitz*."""
+    """One item with both games: WoT under wot_*, Blitz under wot_blitz_* / wotBlitz*."""
     item = {
         "item_id": 5, "category_id": 14, "wot_blitz": 1, "wot_region": "eu", "wotRegionPhrase": "EU",
         "wot_battle_count": 100, "wot_gold": 1, "wot_credits": 2, "wotLauncherTitle": "Wargaming.net Game Center",
@@ -36,13 +36,13 @@ def merged() -> dict:
                               "image_url": "//cdn.test/vehicle/ussr-R45_IS-7.png", "alt_image_url": ""}},
         "wot_blitz_battle_count": 200, "wot_blitz_gold": 3, "wot_blitz_credits": 4,
         "wot_blitz_premium_expires": int(datetime(2026, 12, 1, tzinfo=timezone.utc).timestamp()),
-        "blitzTankCount": 2,
-        "blitzTanks": {
+        "wotBlitzTankCount": 2,
+        "wotBlitzTanks": {
             "385": {"tank_id": 385, "name": "Progetto M40 mod. 65", "tier": 10, "is_premium": 0,
                     "is_collectible": 0, "image_url": "", "secret": SECRET},
             "49": {"tank_id": 49, "name": "Type 59", "tier": 8, "is_premium": 1, "is_collectible": 0},
         },
-        "blitzClan": {"name": "Blitz Clan", "tag": "BC", "emblem": SECRET},
+        "wotBlitzClan": {"name": "Blitz Clan", "tag": "BC", "emblem": SECRET},
         "loginData": {"password": SECRET},
     }
     return item
@@ -148,8 +148,8 @@ def test_scrub_keeps_blitz_fields_only(merged):
     text = json.dumps(clean, ensure_ascii=False)
     assert SECRET not in text and "loginData" not in clean
     assert clean["wot_blitz_battle_count"] == 200
-    assert clean["blitzClan"] == {"name": "Blitz Clan", "tag": "BC"}
-    assert {"tank_id", "name", "tier", "is_premium", "is_collectible"} <= set(clean["blitzTanks"][0])
+    assert clean["wotBlitzClan"] == {"name": "Blitz Clan", "tag": "BC"}
+    assert {"tank_id", "name", "tier", "is_premium", "is_collectible"} <= set(clean["wotBlitzTanks"][0])
 
 
 def test_blitz_slides(raw):
@@ -187,3 +187,21 @@ def test_wot_lot_text_unchanged():
     text = lot_text(from_item(_load("synthetic_item.json")), NOW)
     assert text.startswith("World of Tanks · RU\n")
     assert "Кредиты: 24 518 300" in text and "Коллекционн" not in text
+
+
+def test_choice_buttons_for_two_games(merged):
+    from wot_lot_bot.bot import choice_prompt, parse_callback
+    accounts = [from_item(merged, game) for game in games(merged)]
+    text, markup = choice_prompt(accounts, 5)
+    assert "World of Tanks: 100 боёв" in text and "World of Tanks Blitz: 200 боёв" in text
+    buttons = [button for row in markup.inline_keyboard for button in row]
+    assert [b.text for b in buttons] == ["World of Tanks", "World of Tanks Blitz", "Обе игры"]
+    assert [parse_callback(b.callback_data) for b in buttons] == [
+        ((WOT,), 5), ((BLITZ,), 5), ((WOT, BLITZ), 5)]
+    assert all(len(b.callback_data.encode()) <= 64 for b in buttons)  # Telegram's limit
+
+
+@pytest.mark.parametrize("data", ["", "lot", "lot:wot", "lot:tanks:5", "lot:wot:x", "other:wot:5", "lot:wot:5:6"])
+def test_bad_callback_data(data):
+    from wot_lot_bot.bot import parse_callback
+    assert parse_callback(data) is None

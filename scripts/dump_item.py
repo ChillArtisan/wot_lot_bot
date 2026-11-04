@@ -37,7 +37,7 @@ async def main(link: str) -> None:
     for key in sorted(key for key in item if key.endswith("Tanks")):
         fields = sorted({name for record in _records(item[key]) for name in record})
         print(f"  {key} records:", ", ".join(fields) or "empty")
-    # The Blitz names of merged items are a guess until a real item confirms them.
+    # Lolz may add Blitz fields: list those the bot does not read yet.
     unread = sorted(key for key in item if "blitz" in key.lower() and key not in WOT_FIELDS)
     if unread:
         print("Blitz fields the bot does not read:", ", ".join(unread))
